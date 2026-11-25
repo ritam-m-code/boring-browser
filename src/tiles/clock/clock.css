@@ -1,0 +1,47 @@
+/* Adopted as a constructable stylesheet by core, so: no @import, no @font-face.
+   Custom properties from the active theme still resolve here.
+
+   THEME-AGNOSTIC: this file may only use the tokens the theme contract
+   guarantees (--display, --ui, --display-weight, --display-style,
+   --display-skew, --display-tracking, --ink-on, --muted-on, --accent).
+   Nothing here knows whether it is being rendered as Persona 5 or Persona 3. */
+
+.clock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.clock__time {
+  font-family: var(--display);
+  font-weight: var(--display-weight, 700);
+  font-style: var(--display-style, normal);
+  font-size: clamp(54px, 7vw, 96px);
+  line-height: 0.9;
+  letter-spacing: var(--display-tracking, 0);
+  color: inherit;
+  transform: var(--display-skew, none);
+  transform-origin: left center;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.clock__secs {
+  font-size: 0.34em;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.clock__secs[hidden] { display: none; }
+
+.clock__date {
+  font-family: var(--ui, inherit);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--muted-on);
+  padding-left: 2px;
+}

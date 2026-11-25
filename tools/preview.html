@@ -1,0 +1,30 @@
+<!doctype html>
+<!--
+  DEV ONLY. Mirrors newtab.html but stubs chrome.storage, so the real page can
+  be rendered outside an extension context:
+
+    python -m http.server 8731
+    chrome --headless=new --screenshot=out.png --window-size=1440,900 \
+           http://localhost:8731/tools/preview.html
+
+  Served over http rather than opened as a file because ES modules are blocked
+  on the file:// origin.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New Tab (preview)</title>
+  <link rel="stylesheet" href="../src/styles/theme.css">
+</head>
+<body>
+  <div id="art" aria-hidden="true"></div>
+  <div id="bleed" aria-hidden="true"></div>
+  <main id="grid"></main>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- classic script: runs before the deferred module graph -->
+  <script src="chrome-stub.js"></script>
+  <script type="module" src="../src/app.js"></script>
+</body>
+</html>

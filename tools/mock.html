@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pretty Browser - tile mock</title>
+<link rel="stylesheet" href="../src/styles/theme.css">
+<style>
+  /* Mock-only content styling. Real tiles ship their own CSS module; this
+     exists to judge composition before those tiles are written.
+     Uses ONLY the theme contract tokens, so it renders correctly under
+     whichever theme src/styles/theme.css currently points at. */
+  .big { font-family: var(--display); font-weight: var(--display-weight, 700);
+         font-style: var(--display-style, normal); font-size: 60px; line-height: .9; letter-spacing: var(--display-tracking, 0);
+         transform: var(--display-skew, none); transform-origin: left center;
+         font-variant-numeric: tabular-nums; }
+  .big i { font-style: normal; font-size: .34em; color: var(--accent); }
+  .med { font-family: var(--display); font-weight: var(--display-weight, 700);
+         font-style: var(--display-style, normal); font-size: 36px; line-height: .95; transform: var(--display-skew, none);
+         transform-origin: left center; letter-spacing: var(--display-tracking, 0); }
+  .sub { font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+         color: var(--muted-on); margin-top: 6px; }
+  .row { display: flex; align-items: center; gap: 10px; font-size: 13px;
+         padding: 5px 0; letter-spacing: .12em; text-transform: uppercase; }
+  .box { width: 13px; height: 13px; border: 1px solid currentColor; flex: 0 0 auto; opacity: .6; }
+  .box.on { background: var(--accent); border-color: var(--accent); opacity: 1; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 11px; }
+  .tab { font-size: 10px; letter-spacing: .2em; padding: 5px 13px;
+         text-transform: uppercase; border: 1px solid currentColor; opacity: .55; }
+  .tab.on { background: var(--accent); border-color: var(--accent); opacity: 1;
+            color: var(--deep, #fff); }
+  .field { border: 1px solid currentColor; padding: 9px 12px; font-size: 13px; opacity: .45; }
+  .due { display: flex; justify-content: space-between; gap: 12px; font-size: 13px;
+         padding: 6px 0; letter-spacing: .1em; text-transform: uppercase;
+         border-bottom: 1px solid rgba(127,127,127,.14); }
+  .due b { color: var(--accent); font-weight: 500; letter-spacing: .14em; }
+  .pill { display: inline-block; font-size: 11px; letter-spacing: .2em; padding: 8px 15px;
+          text-transform: uppercase; border: 1px solid currentColor;
+          margin: 4px 6px 4px 0; opacity: .75; }
+  .phase { display: flex; gap: 3px; margin-bottom: 9px; }
+  .phase i { flex: 1; height: 3px; background: currentColor; opacity: .2; font-style: normal; }
+  .phase i.on { background: var(--accent); opacity: 1; height: 3px; }
+  .phase-lbl { display: flex; gap: 3px; font-size: 8.5px; letter-spacing: .16em;
+               text-transform: uppercase; color: var(--muted-on); }
+  .phase-lbl span { flex: 1; }
+  .phase-lbl span.on { color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="art" aria-hidden="true"></div>
+<div id="bleed" aria-hidden="true"></div>
+<main id="grid"></main>
+
+<script type="module">
+import { createCell } from "../src/core/layout.js";
+import { collageSVG, seedForDate, shardClip, shardTilt, shardOffset, lightTiles, tileLabel,
+         bleedText, hashString } from "../src/core/art.js";
+
+// ?dark=1 forces the Dark Hour, so it can be reviewed without waiting for 00:00
+const params = new URLSearchParams(location.search);
+const now = new Date();
+document.documentElement.dataset.hour = params.has("dark") ? "0" : String(now.getHours());
+// ?depth=deep|mid|shallow to compare how far under the surface the page sits
+if (params.has("depth")) document.documentElement.dataset.depth = params.get("depth");
+
+const daySeed = seedForDate(now);
+document.getElementById("art").innerHTML = collageSVG(daySeed, { date: now });
+
+// ?dark=1 also forces the bleed word to the Dark Hour
+const bleedWhen = params.has("dark") ? new Date(new Date().setHours(0, 30, 0, 0)) : now;
+document.getElementById("bleed").textContent = bleedText(bleedWhen) || "";
+
+const TILES = [
+  { id: "clock", title: "Time", cols: 2, body:
+      `<div class="big">18:44<i>:28</i></div><div class="sub">Tue 24 Nov</div>` },
+  { id: "weather", title: "Waterloo", cols: 1, body:
+      `<div class="med">-4&deg;</div><div class="sub">Feels -9 &middot; Snow 2cm</div>` },
+  { id: "games", title: "Daily", cols: 1, body:
+      `<div class="row"><span class="box on"></span>Crossword</div>
+       <div class="row"><span class="box on"></span>The Mini</div>
+       <div class="row"><span class="box"></span>Krillion</div>
+       <div class="sub">Streak 12</div>` },
+  { id: "search", title: "Search", cols: 2, body:
+      `<div class="tabs"><span class="tab on">Google</span><span class="tab">Gemini</span><span class="tab">Claude</span></div>
+       <div class="field">best ramen in waterloo</div>` },
+  { id: "due", title: "Due", cols: 1, body:
+      `<div class="due"><span>Stats pset</span><b>Fri</b></div>
+       <div class="due"><span>Rent</span><b>Dec 1</b></div>
+       <div class="due"><span>Dentist</span><b>Dec 4</b></div>
+       <div class="due"><span>Essay draft</span><b>Dec 9</b></div>` },
+  { id: "quicklaunch", title: "Launch", cols: 1, body:
+      `<span class="pill">Claude</span><span class="pill">Gemini</span>` },
+  { id: "dayphase", title: "Today", cols: 4, body:
+      `<div class="phase"><i></i><i class="on"></i><i></i><i></i><i></i></div>
+       <div class="phase-lbl"><span>Morning</span><span class="on">Daytime</span><span>After School</span><span>Evening</span><span>Late Night</span></div>
+       <div class="sub">11:00 standup &middot; 13:00 pset due &middot; 19:30 dinner</div>` },
+];
+
+const grid = document.getElementById("grid");
+const light = lightTiles(TILES.map((t) => t.id));
+
+for (const t of TILES) {
+  const seed = (daySeed ^ hashString(t.id)) >>> 0;
+  const parts = createCell({
+    id: t.id, title: t.title, cols: t.cols, rows: 1,
+    tilt: shardTilt(seed), clip: shardClip(seed), offset: shardOffset(seed),
+    light: light.has(t.id), label: tileLabel(t.id),
+  });
+  parts.body.innerHTML = t.body;
+  grid.append(parts.cell);
+}
+</script>
+</body>
+</html>

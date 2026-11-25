@@ -1,0 +1,452 @@
+/* ==========================================================================
+   Persona 3 Reload theme.
+
+   Reference: the P3R main menu (see reference/). Key corrections taken from
+   it - the water is VIVID, not navy: bright cyan at the surface falling to
+   saturated royal blue, with caustics rippling on the underside of the
+   surface and submerged structures showing through as silhouettes. And the
+   type is ITALIC and substantial, not thin and widely tracked.
+
+   Self-contained on purpose. Each theme carries its own reset and layout so
+   the two can be swapped with one import and never interfere.
+   ========================================================================== */
+
+@font-face {
+  font-family: "P3 Sans";
+  src: url("../../../assets/fonts/p3r-jost-var.woff2") format("woff2");
+  font-weight: 100 900;        /* Jost ships variable: one file per style */
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "P3 Sans";
+  src: url("../../../assets/fonts/p3r-jost-italic-var.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: block;
+}
+
+:root {
+  /* ---- the water -------------------------------------------------------
+     Depth sets how far under the surface the page sits. Default is "mid".
+     Override with data-depth="deep" | "shallow" on <html>. --------------- */
+  --surface: #6fe3fb;   /* just under the waterline */
+  --upper:   #2ba6ea;
+  --mid:     #1573d8;
+  --lower:   #0e49b4;
+  --deep:    #0a2c84;
+  --abyss:   #071d5c;
+
+  --panel:   rgba(4, 24, 68, 0.58);
+  --line:    rgba(170, 232, 255, 0.4);
+  --line-hi: rgba(210, 246, 255, 0.78);
+
+  --cyan:      #7fe8ff;
+  --cyan-soft: #c8f3ff;
+  --ice:       #f0fbff;
+  --white:     #ffffff;
+  --muted:     #a8d4ee;
+
+  --glow: #bdefff;
+
+  --moon-lit:  #f4fdff;
+  --moon-dark: #0c3a8c;
+
+  --sans: "P3 Sans", "Century Gothic", system-ui, sans-serif;
+
+  /* ---- the contract every theme must satisfy --------------------------
+     Tile stylesheets use ONLY these, never a theme's own colour names. */
+  --display: var(--sans);
+  --ui: var(--sans);
+  --display-weight: 400;
+  --display-style: italic;        /* P3R slants with a real italic... */
+  --display-skew: none;           /* ...where P5 fakes it with a transform */
+  --display-tracking: 0.01em;
+  --ink-on: var(--ice);
+  --muted-on: var(--muted);
+  --accent: var(--cyan);
+  /* --------------------------------------------------------------------- */
+
+  --gap: 20px;
+  --pad: 16px;
+}
+
+/* deeper water: more weight, less light */
+:root[data-depth="deep"] {
+  --surface: #2a9ccb;
+  --upper:   #1670ad;
+  --mid:     #0d4a86;
+  --lower:   #0a3160;
+  --deep:    #071f40;
+  --abyss:   #04142c;
+  --panel:   rgba(4, 20, 46, 0.56);
+  --line:    rgba(140, 210, 245, 0.28);
+  --muted:   #8ab4cf;
+  --glow:    #8fd0ff;
+}
+
+/* shallow water: nearly at the surface, brightest */
+:root[data-depth="shallow"] {
+  --surface: #a2f2ff;
+  --upper:   #4fcaf6;
+  --mid:     #2191e8;
+  --lower:   #1565d2;
+  --deep:    #1040a8;
+  --abyss:   #0b2c80;
+  --panel:   rgba(5, 32, 92, 0.46);
+  --line:    rgba(200, 244, 255, 0.44);
+  --muted:   #bfe4f7;
+}
+
+/* --- The Dark Hour -------------------------------------------------------
+   P3's hidden 25th hour: a sickly green sky and moon, water turned blood
+   red. A pure token swap - nothing in the generated SVG carries a colour in
+   its markup, so none of it is regenerated. ------------------------------ */
+
+:root[data-hour="0"] {
+  --surface: #cbe86a;
+  --upper:   #8fae38;
+  --mid:     #5c7a22;
+  --lower:   #3c5416;
+  --deep:    #22320c;
+  --abyss:   #111806;
+
+  --panel:   rgba(20, 28, 8, 0.58);
+  --line:    rgba(200, 236, 110, 0.3);
+  --line-hi: rgba(222, 248, 150, 0.62);
+
+  --cyan:      #cdec5e;
+  --cyan-soft: #e6f7a8;
+  --ice:       #f4fbdc;
+  --white:     #ffffff;
+  --muted:     #a7bd6e;
+
+  --glow:      #b7d94a;
+  --moon-lit:  #e2f58a;
+  --moon-dark: rgba(34, 50, 12, 0.45);
+  --blood:     #7a0d16;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; min-height: 100%; }
+
+body {
+  background: linear-gradient(
+    180deg,
+    var(--surface) 0%,
+    var(--upper)   11%,
+    var(--mid)     30%,
+    var(--lower)   54%,
+    var(--deep)    78%,
+    var(--abyss)  100%
+  );
+  background-attachment: fixed;
+  color: var(--ice);
+  font-family: var(--sans);
+  font-weight: 400;
+  overflow-x: hidden;
+}
+
+/* --- the submerged field -------------------------------------------------- */
+
+#art { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+#art svg { display: block; width: 100%; height: 100%; }
+
+/* Nothing in the generated SVG is tinted; it all takes colour from here,
+   which is what makes the Dark Hour a stylesheet switch. */
+#art .p3-caustic    { stroke: var(--white); }
+#art .p3-ray        { fill: var(--cyan-soft); }
+#art .p3-ripple     { stroke: var(--cyan-soft); stroke-width: 1.4; }
+#art .p3-bub        { fill: var(--white); }
+#art .p3-silhouette { fill: var(--abyss); }
+/* Dimmed because it sits behind the glass: at full strength it washes out
+   whichever tile overlaps it. The dark disc is what makes the phase legible,
+   so it keeps more weight than the lit side. */
+#art .p3-moon       { fill: var(--moon-lit); opacity: 0.72; }
+#art .p3-moon-dark  { fill: var(--moon-dark); opacity: 0.5; }
+#art .p3-glow-in  { stop-color: var(--glow); stop-opacity: 0.26; }
+#art .p3-glow-mid { stop-color: var(--glow); stop-opacity: 0.07; }
+#art .p3-glow-out { stop-color: var(--glow); stop-opacity: 0; }
+
+/* Ambient, not animated-looking: a pass takes a minute or more, and the whole
+   thing stops under prefers-reduced-motion. */
+@keyframes p3-rise {
+  from { transform: translateY(60px); }
+  to   { transform: translateY(-1120px); }
+}
+#art .p3-bub {
+  animation-name: p3-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* --- the bleed -----------------------------------------------------------
+   One oversized word running off the left edge, behind everything. Taken
+   from the reference, where the section name sits huge and half-cropped
+   behind the menu. Here it names the current day phase, so it changes
+   through the day and reads DARK HOUR after midnight. ------------------- */
+
+#bleed {
+  position: fixed;
+  z-index: 0;
+  left: -0.07em;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--sans);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(130px, 19vw, 340px);
+  line-height: 0.78;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  color: var(--white);
+  opacity: 0.12;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* It is the loudest thing on screen during the Dark Hour, which is the point. */
+:root[data-hour="0"] #bleed { opacity: 0.16; }
+
+/* --- grid ----------------------------------------------------------------- */
+
+#grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap);
+  width: min(1240px, 100% - 48px);
+  margin: clamp(28px, 6vh, 80px) auto;
+  align-content: start;
+}
+
+@media (max-width: 1000px) { #grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) {
+  #grid { grid-template-columns: 1fr; width: calc(100% - 32px); }
+  .cell { grid-column: span 1 !important; }
+}
+
+.cell {
+  grid-column: span var(--span-cols, 1);
+  grid-row: span var(--span-rows, 1);
+  min-width: 0;
+}
+
+/* --- shard ---------------------------------------------------------------- */
+/* No clip-path, no tilt, no misregistration: aligned glass, submerged. */
+
+.shard {
+  position: relative;
+  height: 100%;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 22px 50px -30px rgba(2, 12, 40, 0.95);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+/* instrument tick, top-right */
+.shard::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 9px;
+  height: 9px;
+  border-top: 1px solid var(--cyan);
+  border-right: 1px solid var(--cyan);
+  opacity: 0.5;
+}
+
+.cell:hover .shard {
+  border-color: var(--line-hi);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 28px 58px -28px rgba(2, 12, 40, 1),
+    0 0 40px -12px var(--glow);
+}
+
+.shard__inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* --- header: the "suave" treatment ----------------------------------------
+   Italic, substantial, close-tracked - taken from the menu reference, where
+   the type is slanted and has weight, rather than thin and spaced out. The
+   short accent rule under it replaces a full-width hairline. ------------- */
+
+.shard__head {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px var(--pad) 9px;
+}
+
+.shard__head::after {
+  content: "";
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--cyan) 0 56px, var(--line) 56px 100%);
+  opacity: 0.85;
+}
+
+.shard__head h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 10px rgba(3, 20, 60, 0.6);
+}
+
+/* the arcana - the whole Persona-reference budget, kept quiet */
+.shard__label {
+  font-size: 10px;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  opacity: 0.9;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.shard__body { flex: 1 1 auto; padding: var(--pad); min-height: 0; }
+
+/* --- display type --------------------------------------------------------- */
+
+.display {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+}
+
+/* --- error shard ---------------------------------------------------------- */
+/* XVI - The Tower. */
+
+.shard--error {
+  border-color: rgba(255, 120, 130, 0.6);
+  background: rgba(70, 14, 24, 0.5);
+}
+.shard--error::after { border-color: #ff8a94; opacity: 0.85; }
+.shard--error .shard__head::after { background: #ff8a94; opacity: 0.7; }
+.shard--error .shard__label { color: #ff9ba3; }
+
+.tile-error { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.tile-error__label {
+  font-size: 24px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ff9ba3;
+}
+.tile-error__msg {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-word;
+  max-height: 4.5em;
+  overflow: hidden;
+}
+
+/* --- buttons -------------------------------------------------------------- */
+
+.btn {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ice);
+  background: transparent;
+  border: 1px solid var(--line-hi);
+  padding: 7px 17px;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+.btn:hover { background: var(--cyan); color: #06224f; }
+.btn:focus-visible { outline: 1px solid var(--cyan-soft); outline-offset: 3px; }
+
+/* --- toast ---------------------------------------------------------------- */
+
+#toast {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(140%);
+  background: var(--panel);
+  border: 1px solid var(--line-hi);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: var(--ice);
+  font-size: 13px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 10px 24px;
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1),
+              opacity 220ms ease-out,
+              visibility 0s linear 220ms;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 90vw;
+  overflow: hidden;
+}
+#toast.is-up {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
+  transition: transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1),
+              opacity 220ms ease-out,
+              visibility 0s;
+}
+
+/* --- a11y ----------------------------------------------------------------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation: none !important;
+  }
+  .cell:hover .shard { transform: none; }
+}

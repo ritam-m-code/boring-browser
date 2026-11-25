@@ -1,0 +1,14 @@
+/* ==========================================================================
+   THE THEME SWITCH (stylesheet half).
+
+   Point this at a theme folder and the page changes look. The other half is
+   the import at the top of src/core/art.js - change both together.
+
+     ../themes/p5/theme.css    Persona 5: cut-paper collage, red/black/cream
+     ../themes/p3r/theme.css   Persona 3 Reload: submerged, blue, sterile
+
+   This file is linked from newtab.html rather than being a CSS module, which
+   is what lets it carry @import and @font-face at all.
+   ========================================================================== */
+
+@import url("../themes/p3r/theme.css");

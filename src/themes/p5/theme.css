@@ -1,0 +1,363 @@
+/* ==========================================================================
+   Pretty Browser - theme
+
+   Loaded as a plain <link>, NOT a CSS module, because constructable
+   stylesheets do not support @font-face / @import. Custom properties declared
+   on :root here still resolve inside the per-tile adopted stylesheets.
+   ========================================================================== */
+
+/* Anton. One weight, upright only - the slant everywhere comes from
+   transform: skewX(), never from font-style, or the browser would stack a
+   synthetic oblique on top of the skew and double-slant it. */
+@font-face {
+  font-family: "PB Display";
+  src: url("../../../assets/fonts/p5-display-900.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: block;   /* local disk, so there is no FOUT worth tolerating */
+}
+@font-face {
+  font-family: "PB UI";
+  src: url("../../../assets/fonts/p5-ui-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  /* --- palette ---------------------------------------------------------- */
+  --black:      #080706;
+  --ink:        #0c0b0a;
+  --panel:      #0c0b0a;   /* near-pure black: P5 has almost no mid-tones */
+  --panel-high: #161312;
+  --red:        #e4002b;
+  --red-hot:    #ff2342;
+  --red-deep:   #8e0019;
+  --white:      #f5f1e6;
+  --cream:      #efe9d9;   /* the big paper slabs */
+  --bone:       #cdc6b8;
+  --grey:       #6d665f;
+
+  --edge:      var(--white);
+  --ink-on:    var(--white);   /* text colour inside a shard; flips on light shards */
+  --muted-on:  var(--bone);
+  --mis-color: var(--red);     /* misregistration: the hard offset copy behind a shard */
+  --mis-x: 16px;
+  --mis-y: 16px;
+  --halftone: rgba(245, 241, 230, 0.07);
+
+  /* --- type ------------------------------------------------------------- */
+  --display: "PB Display", "Arial Narrow", Haettenschweiler, Impact, sans-serif;
+  --ui:      "PB UI", "Segoe UI Semibold", system-ui, sans-serif;
+
+  /* ---- the contract every theme must satisfy --------------------------
+     Tile stylesheets use ONLY these, never a theme's own colour names. */
+  --display-weight: 900;
+  --display-style: normal;        /* Anton has no italic; the slant is the skew */
+  --display-skew: skewX(-8deg);
+  --display-tracking: -0.02em;
+  --accent: var(--red);
+  /* --------------------------------------------------------------------- */
+
+  /* --- geometry --------------------------------------------------------- */
+  --cut:    26px;   /* corner cut size on the default shard */
+  --edge-w: 4px;    /* shard border thickness */
+  --gap:    20px;
+  --pad:    16px;
+
+  /* Default cut-paper silhouette. core/art.js overrides --shard-clip per
+     tile with a jittered polygon, so this is only the fallback. */
+  --shard-clip: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; min-height: 100%; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--ui);
+  font-weight: 600;
+  overflow-x: hidden;
+  /* halftone print texture across the whole field */
+  background-image: radial-gradient(var(--halftone) 1px, transparent 1.3px);
+  background-size: 4px 4px;
+}
+
+/* --- generated collage ---------------------------------------------------- */
+
+#art {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+/* The collage is background, not subject. Held well back so the page reads as
+   black with red gestures in it, rather than as red wallpaper. */
+#art svg { display: block; width: 100%; height: 100%; opacity: 0.78; }
+
+/* soft vignette to settle the corners */
+#art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 38%, transparent 42%, rgba(8, 7, 6, 0.55) 100%);
+}
+
+/* The P5 theme declares no bleed text, so the element is always empty. */
+#bleed { display: none; }
+
+/* --- grid ----------------------------------------------------------------- */
+
+#grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap);
+  width: min(1240px, 100% - 48px);
+  margin: clamp(28px, 6vh, 80px) auto;
+  align-content: start;
+}
+
+@media (max-width: 1000px) {
+  #grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  #grid { grid-template-columns: 1fr; width: calc(100% - 32px); }
+  .cell { grid-column: span 1 !important; }
+}
+
+.cell {
+  grid-column: span var(--span-cols, 1);
+  grid-row: span var(--span-rows, 1);
+  min-width: 0;   /* lets long content shrink rather than overflow the grid */
+
+  /* The misregistration: a hard, unblurred colour copy behind the shard, like
+     a comic printed off-plate.
+     This MUST live on the cell, not the shard. clip-path clips the output of
+     filter, so a drop-shadow on the clipped element is generated and then
+     immediately clipped away by its own silhouette. On the unclipped parent it
+     correctly traces the child's cut-paper outline. */
+  filter: drop-shadow(var(--mis-x) var(--mis-y) 0 var(--mis-color));
+  transition: filter 140ms ease-out;
+}
+
+/* A red copy behind a dark shard, on a dark red-streaked collage, is nearly
+   invisible - which defeats the whole point. Dark shards misregister in cream. */
+.cell:not(.cell--light) { --mis-color: var(--cream); }
+
+/* Light treatment: a cream paper slab with black type. This is what gives the
+   page white STRUCTURE rather than making white only a text colour.
+   Set on the cell so the tokens cascade to both the cell's filter and the
+   shard's own painting. */
+.cell--light {
+  --edge: var(--black);
+  --ink-on: var(--black);
+  --muted-on: #5d564c;
+  --mis-color: var(--red);
+}
+
+.cell:hover {
+  filter: drop-shadow(calc(var(--mis-x) * 1.35) calc(var(--mis-y) * 1.35) 0 var(--mis-color));
+}
+
+/* --- shard ---------------------------------------------------------------- */
+
+/* Two nested clipped boxes: the outer paints the edge, the inner paints the
+   panel. This is the only way to get a border on a clip-path'd element. */
+.shard {
+  height: 100%;
+  background: var(--edge);
+  padding: var(--edge-w);
+  clip-path: var(--shard-clip);
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 140ms ease-out;
+}
+
+.cell:hover .shard {
+  transform: rotate(var(--tilt, 0deg)) translateY(-3px);
+}
+
+.shard__inner {
+  height: 100%;
+  background: var(--panel);
+  color: var(--ink-on);
+  clip-path: var(--shard-clip);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Light treatment paints here; its tokens are declared on .cell--light above,
+   because the misregistration filter on the cell needs them too. */
+.cell--light .shard__inner { background: var(--cream); }
+.cell--light .shard__head { background: var(--black); }
+.cell--light .shard__head h2 { color: var(--cream); }
+
+/* angled title band */
+.shard__head {
+  flex: 0 0 auto;
+  background: var(--red);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 26px) 100%, 0 100%);
+  padding: 6px var(--pad) 5px;
+}
+
+.shard__head h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 19px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--white);
+  transform: skewX(-8deg);
+  transform-origin: left center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shard__body {
+  flex: 1 1 auto;
+  padding: var(--pad);
+  min-height: 0;
+}
+
+/* --- shared display-type helper ------------------------------------------- */
+
+.display {
+  font-family: var(--display);
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  line-height: 0.92;
+  transform: skewX(-6deg);
+}
+
+/* --- error shard ---------------------------------------------------------- */
+/* Broken state is part of the aesthetic: a deliberate red slash, not a hole. */
+
+.shard--error { --edge: var(--red); }
+
+.shard--error .shard__inner {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(228, 0, 43, 0.14) 0 10px,
+      transparent 10px 20px
+    ),
+    var(--ink);
+}
+.shard--error .shard__head { background: var(--red-deep); }
+
+.tile-error {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+.tile-error__label {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 26px;
+  letter-spacing: 0.02em;
+  color: var(--red);
+  transform: skewX(-6deg);
+}
+.tile-error__msg {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  color: var(--grey);
+  word-break: break-word;
+  max-height: 4.5em;
+  overflow: hidden;
+}
+
+/* --- buttons -------------------------------------------------------------- */
+
+.btn {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--red);
+  border: 0;
+  padding: 6px 16px 5px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 100%, 0 100%);
+  cursor: pointer;
+  transform: skewX(-6deg);
+}
+.btn:hover { background: var(--red-hot); }
+.btn:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+
+/* --- toast ---------------------------------------------------------------- */
+
+#toast {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(140%) skewX(-6deg);
+  background: var(--white);
+  color: var(--black);
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 8px 22px 7px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  /* visibility/opacity as well as the transform: a short toast does not clear
+     the viewport on translateY alone, and would peek above the bottom edge */
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 180ms cubic-bezier(0.2, 0.9, 0.3, 1),
+              opacity 180ms ease-out,
+              visibility 0s linear 180ms;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 90vw;
+  overflow: hidden;
+}
+#toast.is-up {
+  transform: translateX(-50%) translateY(0) skewX(-6deg);
+  opacity: 1;
+  visibility: visible;
+  transition: transform 180ms cubic-bezier(0.2, 0.9, 0.3, 1),
+              opacity 180ms ease-out,
+              visibility 0s;
+}
+
+/* --- a11y ----------------------------------------------------------------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .cell:hover .shard { transform: rotate(var(--tilt, 0deg)); }
+}

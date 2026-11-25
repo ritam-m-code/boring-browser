@@ -1,0 +1,10 @@
+{
+  "name": "pretty-browser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Persona 5 inspired Chrome new tab page. No dependencies and no build step - this file exists only so Node treats the .js files as ES modules when running the scripts in tools/.",
+  "scripts": {
+    "test": "node tools/test-art.mjs"
+  }
+}
